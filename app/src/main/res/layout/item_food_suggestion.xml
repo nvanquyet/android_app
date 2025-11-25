@@ -1,73 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="160dp"
-    android:layout_height="200dp"
-    android:layout_marginEnd="12dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
+    android:layout_width="220dp"
+    android:layout_height="250dp"
+    android:layout_marginEnd="16dp"
     android:clickable="true"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="6dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Hình ảnh món ăn -->
-        <ImageView
-            android:id="@+id/ivFoodImage"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="110dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_food_placeholder"
-            android:background="#F0F0F0" />
+            android:layout_height="140dp">
 
-        <!-- Thông tin món ăn -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <!-- Tên món ăn -->
-            <TextView
-                android:id="@+id/tvFoodName"
+            <ImageView
+                android:id="@+id/ivFoodImage"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Salad rau củ"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:layout_height="match_parent"
+                android:background="@color/background_secondary"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_food_placeholder" />
 
-            <!-- Kcal -->
-            <TextView
-                android:id="@+id/tvFoodKcal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="150 kcal"
-                android:textSize="12sp"
-                android:textColor="#4CAF50"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/kcal_background"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp" />
-
-            <!-- Thời gian chuẩn bị -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏱️"
-                    android:textSize="10sp" />
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/home_banner_overlay">
 
                 <TextView
                     android:id="@+id/tvPrepTime"
@@ -75,30 +43,97 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="15 phút"
-                    android:textSize="10sp"
-                    android:textColor="#666666"
-                    android:layout_marginStart="4dp" />
-
-                <!-- Rating -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⭐"
-                    android:textSize="10sp" />
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:drawableStart="@drawable/ic_timer"
+                    android:drawableTint="@android:color/white"
+                    android:drawablePadding="6dp" />
 
                 <TextView
                     android:id="@+id/tvRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4.5"
-                    android:textSize="10sp"
-                    android:textColor="#666666"
-                    android:layout_marginStart="2dp" />
-
+                    android:text="⭐ 4.5"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="12sp" />
             </LinearLayout>
+        </FrameLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/tvFoodName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Salad rau củ"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tvFoodKcal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/kcal_background"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="150 kcal"
+                android:textColor="@color/primary_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nguyên liệu"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvIngredientSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="6 nguyên liệu"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddFood"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Thêm"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    app:cornerRadius="20dp"
+                    app:strokeColor="@color/primary"
+                    app:icon="@drawable/ic_plus"
+                    app:iconTint="@color/primary"
+                    app:iconPadding="8dp"
+                    android:textColor="@color/primary" />
+            </LinearLayout>
         </LinearLayout>
-
     </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

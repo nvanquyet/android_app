@@ -44,7 +44,7 @@ public class IngredientDataResponseDto implements Serializable {
     }
 
     public boolean isExpiringSoon() {
-        return expiryDate != null && DateUtils.isExpiringSoon(expiryDate.toString(), 7);
+        return expiryDate != null && DateUtils.isExpiringSoon(expiryDate, 7);
     }
     public static IngredientDataResponseDto fromIngredient(Ingredient ingredient) {
         return new IngredientDataResponseDto(

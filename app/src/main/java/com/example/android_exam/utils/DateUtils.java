@@ -106,9 +106,34 @@ public class DateUtils {
     }
 
     /**
+     * Overload: calculate days until expiry from Date object
+     */
+    public static int getDaysUntilExpiry(Date expiryDate) {
+        if (expiryDate == null) {
+            return 0;
+        }
+
+        LocalDate localExpiry = convertToLocalDate(expiryDate);
+        if (localExpiry == null) {
+            return 0;
+        }
+
+        LocalDate today = LocalDate.now(SYSTEM_TIMEZONE);
+        return (int) ChronoUnit.DAYS.between(today, localExpiry);
+    }
+
+    /**
      * Check if date is expiring soon (within daysAhead days)
      */
     public static boolean isExpiringSoon(String expiryDate, int daysAhead) {
+        int daysUntilExpiry = getDaysUntilExpiry(expiryDate);
+        return daysUntilExpiry <= daysAhead && daysUntilExpiry >= 0;
+    }
+
+    /**
+     * Overload: check expiring soon from Date object
+     */
+    public static boolean isExpiringSoon(Date expiryDate, int daysAhead) {
         int daysUntilExpiry = getDaysUntilExpiry(expiryDate);
         return daysUntilExpiry <= daysAhead && daysUntilExpiry >= 0;
     }

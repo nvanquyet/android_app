@@ -28,8 +28,8 @@ import com.google.android.material.textfield.TextInputLayout;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etUsername, etPassword, etEmail;
-    private Button btnLogin, btnSwitchToRegister;
-    private TextView tvTitle, tvSwitchText;
+    private Button btnLogin;
+    private TextView btnSwitchToRegister, tvTitle, tvSwitchText;
     private ProgressBar progressBar;
     private TextInputLayout tilEmail;
     private boolean isLoginMode = true;
