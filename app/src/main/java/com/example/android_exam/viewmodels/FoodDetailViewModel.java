@@ -18,8 +18,6 @@ import com.example.android_exam.utils.FoodUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -46,6 +44,7 @@ public class FoodDetailViewModel extends ViewModel {
     private FoodDataResponseDto currentFood;
     private boolean isSuggestionFood = false;
     private String selectedConsumeTime;
+    private String selectedConsumeTimeUtc;
 
     // Local time formatter (for display)
     private static final DateTimeFormatter LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -59,8 +58,9 @@ public class FoodDetailViewModel extends ViewModel {
         hasChangesLiveData.setValue(false);
         confirmButtonEnabledLiveData.setValue(false);
 
-        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime currentDateTime = DateUtils.getCurrentDateTime(null);
         selectedConsumeTime = currentDateTime.format(LOCAL_TIME_FORMATTER);
+        selectedConsumeTimeUtc = DateUtils.formatLocalDateTimeToIsoUTC(currentDateTime);
         consumeTimeLiveData.setValue(selectedConsumeTime);
 
         Log.d("FoodDetailViewModel", "Default consume time set (local): " + selectedConsumeTime);
@@ -72,26 +72,16 @@ public class FoodDetailViewModel extends ViewModel {
         Log.d("FoodDetailViewModel", "Loading food detail for ID: " + (foodData != null ? foodData.getId() : "null"));
         this.isSuggestionFood = isSuggestionFood;
         isSuggestionLiveData.setValue(isSuggestionFood);
-        originalFood = foodData;
+
+        originalFood = copyFood(foodData);
+        normalizeConsumedAt(originalFood);
         currentFood = copyFood(originalFood);
 
-        // Set consume time from food data or current LOCAL time
-        if (currentFood.getConsumedAt() != null && !currentFood.getConsumedAt().isEmpty()) {
-            // If consume time from server has Z suffix, parse it and convert to local time for display
-            LocalDateTime parsedDateTime = DateUtils.parseIsoDateTimeWithoutTimezoneConvert(currentFood.getConsumedAt());
-            if (parsedDateTime != null) {
-                selectedConsumeTime = parsedDateTime.format(LOCAL_TIME_FORMATTER);
-                Log.d("FoodDetailViewModel", "Parsed consume time: " + parsedDateTime);
-            } else {
-                selectedConsumeTime = currentFood.getConsumedAt();
-            }
-        } else {
-            // Use current LOCAL time
-            LocalDateTime currentDateTime = LocalDateTime.now();
-            selectedConsumeTime = currentDateTime.format(LOCAL_TIME_FORMATTER);
-            currentFood.setConsumedAt(selectedConsumeTime);
+        LocalDateTime consumeDateTime = DateUtils.parseIsoDateTime(originalFood.getConsumedAt());
+        if (consumeDateTime == null) {
+            consumeDateTime = DateUtils.getCurrentDateTime(null);
         }
-        consumeTimeLiveData.setValue(selectedConsumeTime);
+        applySelectedConsumeDateTime(consumeDateTime);
 
         foodLiveData.postValue(currentFood);
         ingredientsLiveData.postValue(new ArrayList<>(currentFood.getIngredients()));
@@ -124,13 +114,7 @@ public class FoodDetailViewModel extends ViewModel {
     public void onDateTimeSelected(int year, int month, int dayOfMonth, int hourOfDay, int minute) {
         // Create LocalDateTime directly (this is local time)
         LocalDateTime selectedDateTime = LocalDateTime.of(year, month + 1, dayOfMonth, hourOfDay, minute);
-        selectedConsumeTime = selectedDateTime.format(LOCAL_TIME_FORMATTER);
-
-        if (currentFood != null) {
-            currentFood.setConsumedAt(selectedConsumeTime);
-        }
-
-        consumeTimeLiveData.setValue(selectedConsumeTime);
+        applySelectedConsumeDateTime(selectedDateTime);
         checkForChanges();
 
         Log.d("FoodDetailViewModel", "Selected consume time (local): " + selectedConsumeTime);
@@ -141,15 +125,8 @@ public class FoodDetailViewModel extends ViewModel {
      */
     private String convertLocalTimeToUTC(String localTimeString) {
         try {
-            // Parse the local time string
             LocalDateTime localDateTime = LocalDateTime.parse(localTimeString, LOCAL_TIME_FORMATTER);
-
-            // Convert to UTC
-            ZonedDateTime localZoned = localDateTime.atZone(ZoneId.systemDefault());
-            ZonedDateTime utcZoned = localZoned.withZoneSameInstant(ZoneId.of("UTC"));
-
-            // Format with Z suffix
-            return utcZoned.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+            return DateUtils.formatLocalDateTimeToIsoUTC(localDateTime);
         } catch (Exception e) {
             Log.e("FoodDetailViewModel", "Error converting local time to UTC: " + localTimeString, e);
             // Fallback to using DateUtils method
@@ -177,7 +154,10 @@ public class FoodDetailViewModel extends ViewModel {
 
         // Set meal date and consume time
         currentFood.setMealDate(selectedConsumeTime);
-        currentFood.setConsumedAt(selectedConsumeTime);
+        String utcConsumedAt = selectedConsumeTimeUtc != null
+                ? selectedConsumeTimeUtc
+                : convertLocalTimeToUTC(selectedConsumeTime);
+        currentFood.setConsumedAt(utcConsumedAt);
         currentFood.setMealType(FoodUtils.getMealTypeWithTime(selectedConsumeTime));
 
         UpdateFoodRequestDto updateRequest = UpdateFoodRequestDto.fromFoodData(currentFood);
@@ -226,7 +206,10 @@ public class FoodDetailViewModel extends ViewModel {
 
         // Set meal date and consume time
         currentFood.setMealDate(selectedConsumeTime);
-        currentFood.setConsumedAt(selectedConsumeTime);
+        String utcConsumedAt = selectedConsumeTimeUtc != null
+                ? selectedConsumeTimeUtc
+                : convertLocalTimeToUTC(selectedConsumeTime);
+        currentFood.setConsumedAt(utcConsumedAt);
         currentFood.setMealType(FoodUtils.getMealTypeWithTime(selectedConsumeTime));
 
         Log.d("FoodDetailViewModel", "Original local time: " + selectedConsumeTime);
@@ -389,6 +372,31 @@ public class FoodDetailViewModel extends ViewModel {
         }
 
         return copy;
+    }
+
+    private void applySelectedConsumeDateTime(LocalDateTime dateTime) {
+        LocalDateTime effectiveDateTime = dateTime != null ? dateTime : DateUtils.getCurrentDateTime(null);
+        selectedConsumeTime = effectiveDateTime.format(LOCAL_TIME_FORMATTER);
+        selectedConsumeTimeUtc = DateUtils.formatLocalDateTimeToIsoUTC(effectiveDateTime);
+        consumeTimeLiveData.setValue(selectedConsumeTime);
+        if (currentFood != null) {
+            currentFood.setConsumedAt(selectedConsumeTimeUtc);
+        }
+    }
+
+    private void normalizeConsumedAt(FoodDataResponseDto food) {
+        if (food == null) {
+            return;
+        }
+        String consumedAt = food.getConsumedAt();
+        if (consumedAt == null || consumedAt.isEmpty()) {
+            return;
+        }
+        LocalDateTime parsedDateTime = DateUtils.parseIsoDateTime(consumedAt);
+        if (parsedDateTime == null) {
+            return;
+        }
+        food.setConsumedAt(DateUtils.formatLocalDateTimeToIsoUTC(parsedDateTime));
     }
 
     // Getters for LiveData

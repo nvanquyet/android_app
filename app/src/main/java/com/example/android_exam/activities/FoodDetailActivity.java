@@ -273,7 +273,7 @@ public class FoodDetailActivity extends AppCompatActivity {
 
     private void updateConsumeTimeUI(String consumeTime) {
         if (consumeTime != null && !consumeTime.isEmpty()) {
-            LocalDateTime dateTime = DateUtils.parseIsoDateTimeWithoutTimezoneConvert(consumeTime);
+            LocalDateTime dateTime = DateUtils.parseIsoDateTime(consumeTime);
             if (dateTime != null) {
                 // Format ngày
                 String dateStr = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
