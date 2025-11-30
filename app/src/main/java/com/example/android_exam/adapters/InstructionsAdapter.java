@@ -42,18 +42,19 @@ public class InstructionsAdapter extends RecyclerView.Adapter<InstructionsAdapte
     }
 
     class InstructionViewHolder extends RecyclerView.ViewHolder {
-        private TextView tvStepNumber;
         private TextView tvStepContent;
 
         public InstructionViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvStepNumber = itemView.findViewById(R.id.textView);
+            // Layout chỉ có tv_step_content, không có tvStepNumber
             tvStepContent = itemView.findViewById(R.id.tv_step_content);
         }
 
         public void bind(String instruction, int stepNumber) {
-            tvStepNumber.setText(String.valueOf(stepNumber));
-            tvStepContent.setText(instruction);
+            // Hiển thị số bước và nội dung trong cùng một TextView
+            if (tvStepContent != null) {
+                tvStepContent.setText(stepNumber + ". " + instruction);
+            }
         }
     }
 }

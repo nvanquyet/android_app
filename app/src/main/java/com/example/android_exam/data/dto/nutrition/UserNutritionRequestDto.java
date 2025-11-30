@@ -1,11 +1,16 @@
 package com.example.android_exam.data.dto.nutrition;
 
+import com.example.android_exam.core.datetime.DateTimeTypeAdapter;
 import com.example.android_exam.data.dto.user.UserInformationDto;
+import com.google.gson.annotations.JsonAdapter;
 import java.util.Date;
 
 public class UserNutritionRequestDto {
+    @JsonAdapter(DateTimeTypeAdapter.class)
     private Date currentDate;
+    @JsonAdapter(DateTimeTypeAdapter.class)
     private Date startDate;
+    @JsonAdapter(DateTimeTypeAdapter.class)
     private Date endDate;
     private UserInformationDto userInformationDto;
 
@@ -22,7 +27,13 @@ public class UserNutritionRequestDto {
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
         //End date is set to 7 days after start date by default
-        this.endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000L);
+        // Sử dụng Calendar để đảm bảo tính toán đúng với timezone
+        if (startDate != null) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(startDate);
+            cal.add(java.util.Calendar.DAY_OF_MONTH, 7);
+            this.endDate = cal.getTime();
+        }
     }
 
     public Date getEndDate() { return endDate; }

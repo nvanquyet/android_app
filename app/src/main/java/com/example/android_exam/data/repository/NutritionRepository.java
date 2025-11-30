@@ -2,34 +2,26 @@ package com.example.android_exam.data.repository;
 
 import android.util.Log;
 
+import com.example.android_exam.core.datetime.DateTimeManager;
+import com.example.android_exam.core.mapper.DtoMapper;
 import com.example.android_exam.data.api.ApiManager;
 import com.example.android_exam.data.api.DataCallback;
 import com.example.android_exam.data.dto.nutrition.DailyNutritionSummaryDto;
-import com.example.android_exam.data.dto.nutrition.FoodNutritionDto;
-import com.example.android_exam.data.dto.nutrition.NutritionDto;
 import com.example.android_exam.data.dto.nutrition.UserNutritionRequestDto;
 import com.example.android_exam.data.dto.nutrition.WeeklyNutritionSummaryDto;
 import com.example.android_exam.data.dto.response.ApiResponse;
 import com.example.android_exam.data.models.base.User;
-import com.example.android_exam.data.models.enums.MealType;
 import com.example.android_exam.utils.SessionManager;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 public class NutritionRepository {
-    private Random random = new Random();
+    private final DateTimeManager dateTimeManager = DateTimeManager.getInstance();
     private Map<String, DailyNutritionSummaryDto> dailyCache = new HashMap<>();
     private Map<String, WeeklyNutritionSummaryDto> weeklyCache = new HashMap<>();
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private SimpleDateFormat weekFormat = new SimpleDateFormat("yyyy-'W'ww");
 
     public interface Callback<T> {
         void onSuccess(T result);
@@ -43,7 +35,10 @@ public class NutritionRepository {
 
     public void getDailyNutrition(Date date, Callback<DailyNutritionSummaryDto> callback) {
         Log.d("NutritionRepository", "getDailyNutrition called for date: " + date);
-        String dateKey = dateFormat.format(date);
+        // Sử dụng LocalDate để tránh timezone issues khi format key
+        // Format key theo yyyy-MM-dd để consistent với API
+        java.time.LocalDate localDate = dateTimeManager.convertToLocalDate(date);
+        String dateKey = localDate != null ? localDate.format(dateTimeManager.DATE_FORMAT) : dateTimeManager.getTodayString();
         if (dailyCache.containsKey(dateKey)) {
             Log.d("NutritionRepository", "Returning cached data for date: " + dateKey);
             callback.onSuccess(dailyCache.get(dateKey));
@@ -54,13 +49,10 @@ public class NutritionRepository {
             @Override
             public void onUserLoaded(User user) {
                 var userNutritionRequest = new UserNutritionRequestDto();
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(date);
-                cal.add(Calendar.DAY_OF_MONTH, -1);
-                Date adjustedDate = cal.getTime();
-                userNutritionRequest.setCurrentDate(adjustedDate); // Dùng ngày đã lùi
-                //userNutritionRequest.setCurrentDate(date);
-                userNutritionRequest.setUserInformationDto(user.toUserInformationDto());
+                // Sử dụng đúng ngày được chọn, không lùi ngày
+                // Date sẽ được serialize thành ISO UTC string bởi DateTimeTypeAdapter
+                userNutritionRequest.setCurrentDate(date);
+                userNutritionRequest.setUserInformationDto(DtoMapper.toUserInformationDto(user));
                 ApiManager.getInstance().getNutritionClient().getDailyNutritionSummary(userNutritionRequest, new DataCallback<ApiResponse<DailyNutritionSummaryDto>>() {
                     @Override
                     public void onSuccess(ApiResponse<DailyNutritionSummaryDto> result) {
@@ -92,7 +84,9 @@ public class NutritionRepository {
     }
 
     public void getWeeklyNutrition(Date weekStart, Callback<WeeklyNutritionSummaryDto> callback) {
-        String weekKey = weekFormat.format(weekStart);
+        // Sử dụng LocalDate để tránh timezone issues khi format key
+        java.time.LocalDate localDate = dateTimeManager.convertToLocalDate(weekStart);
+        String weekKey = (localDate != null ? localDate.format(dateTimeManager.DATE_FORMAT) : dateTimeManager.getTodayString()) + "-week";
         if (weeklyCache.containsKey(weekKey)) {
             callback.onSuccess(weeklyCache.get(weekKey));
             return;
@@ -104,7 +98,7 @@ public class NutritionRepository {
             public void onUserLoaded(User user) {
                 var userNutritionRequest = new UserNutritionRequestDto();
                 userNutritionRequest.setStartDate(weekStart);
-                userNutritionRequest.setUserInformationDto(user.toUserInformationDto());
+                userNutritionRequest.setUserInformationDto(DtoMapper.toUserInformationDto(user));
                 ApiManager.getInstance().getNutritionClient().getWeeklyNutritionSummary(userNutritionRequest, new DataCallback<ApiResponse<WeeklyNutritionSummaryDto>>() {
                     @Override
                     public void onSuccess(ApiResponse<WeeklyNutritionSummaryDto> result) {

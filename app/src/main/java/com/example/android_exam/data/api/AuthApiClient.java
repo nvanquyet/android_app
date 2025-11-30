@@ -1,5 +1,6 @@
 package com.example.android_exam.data.api;
 
+import com.example.android_exam.core.config.AppConfig;
 import com.example.android_exam.data.dto.AuthResponseDto;
 import com.example.android_exam.data.dto.response.ApiResponse;
 import com.example.android_exam.data.dto.user.ChangePasswordDto;
@@ -17,7 +18,7 @@ public class AuthApiClient extends BaseApiClient {
     public void login(LoginDto loginDto, AuthCallback<ApiResponse<AuthResponseDto>> callback) {
         RequestBody requestBody = createJsonRequestBody(loginDto);
 
-        Request request = createRequestBuilder("auth/login")
+        Request request = createRequestBuilder(AppConfig.Endpoints.AUTH_LOGIN)
                 .post(requestBody)
                 .build();
 
@@ -27,7 +28,7 @@ public class AuthApiClient extends BaseApiClient {
     public void register(RegisterDto registerDto, AuthCallback<ApiResponse<AuthResponseDto>> callback) {
         RequestBody requestBody = createJsonRequestBody(registerDto);
 
-        Request request = createRequestBuilder("auth/register")
+        Request request = createRequestBuilder(AppConfig.Endpoints.AUTH_REGISTER)
                 .post(requestBody)
                 .build();
 
@@ -54,7 +55,7 @@ public class AuthApiClient extends BaseApiClient {
 
     public void logout(AuthCallback<ApiResponse<Boolean>> callback) {
         Request request = createRequestBuilder("auth/logout")
-                .post(RequestBody.create("", MediaType.parse("application/json")))
+                .post(RequestBody.create("", MediaType.parse(AppConfig.API_CONTENT_TYPE_JSON)))
                 .build();
 
         //Change to ResponseCallback
@@ -62,7 +63,7 @@ public class AuthApiClient extends BaseApiClient {
     }
 
     public void getUserProfile(AuthCallback<ApiResponse<UserProfileDto>> callback) {
-        Request request = createRequestBuilder("auth/me")
+        Request request = createRequestBuilder(AppConfig.Endpoints.AUTH_ME)
                 .get()
                 .build();
 
@@ -70,13 +71,13 @@ public class AuthApiClient extends BaseApiClient {
     }
 
     public void updateUserProfile(UserProfileDto userProfileDto, AuthCallback<ApiResponse<UserProfileDto>> callback) {
-        executeJsonRequest("auth/me", "PUT", userProfileDto, new TypeToken<ApiResponse<UserProfileDto>>(){}, callback);
+        executeJsonRequest(AppConfig.Endpoints.AUTH_UPDATE_PROFILE, "PUT", userProfileDto, new TypeToken<ApiResponse<UserProfileDto>>(){}, callback);
     }
 
     public void changePassword(ChangePasswordDto changePasswordDto, AuthCallback<ApiResponse<Object>> callback) {
         RequestBody requestBody = createJsonRequestBody(changePasswordDto);
 
-        Request request = createRequestBuilder("auth/change_password")
+        Request request = createRequestBuilder(AppConfig.Endpoints.AUTH_CHANGE_PASSWORD)
                 .put(requestBody)
                 .build();
 

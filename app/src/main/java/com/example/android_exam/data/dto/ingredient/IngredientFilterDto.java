@@ -1,35 +1,79 @@
 package com.example.android_exam.data.dto.ingredient;
 
 import com.example.android_exam.data.models.enums.IngredientCategory;
-import com.example.android_exam.data.models.enums.IngredientUnit;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
 
+/**
+ * Filter DTO for GET /api/ingredient endpoint
+ * Matches API documentation query parameters
+ */
 public class IngredientFilterDto {
+    @SerializedName("page")
+    private Integer page;
+    
+    @SerializedName("pageSize")
+    private Integer pageSize;
+    
     @SerializedName("category")
     private IngredientCategory category;
-    @SerializedName("isExpired")
-    private Boolean isExpired;
-    @SerializedName("searchTerm")
-    private String searchTerm;
-    @SerializedName("sortBy")
-    private String sortBy;
-    @SerializedName("sortDirection")
-    private String sortDirection;
+    
+    @SerializedName("search")
+    private String search;
+    
+    @SerializedName("expiryDateFrom")
+    private Date expiryDateFrom;
+    
+    @SerializedName("expiryDateTo")
+    private Date expiryDateTo;
 
     // Getters and Setters
-    public IngredientCategory getCategory() { return category; }
-    public void setCategory(IngredientCategory category) { this.category = category; }
+    public Integer getPage() {
+        return page;
+    }
 
-    public Boolean getIsExpired() { return isExpired; }
-    public void setIsExpired(Boolean isExpired) { this.isExpired = isExpired; }
+    public void setPage(Integer page) {
+        this.page = page;
+    }
 
-    public String getSearchTerm() { return searchTerm; }
-    public void setSearchTerm(String searchTerm) { this.searchTerm = searchTerm; }
-    public String getSortBy() { return sortBy; }
-    public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    public String getSortDirection() { return sortDirection; }
-    public void setSortDirection(String sortDirection) { this.sortDirection = sortDirection; }
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public IngredientCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(IngredientCategory category) {
+        this.category = category;
+    }
+
+    public String getSearch() {
+        return search;
+    }
+
+    public void setSearch(String search) {
+        this.search = search;
+    }
+
+    public Date getExpiryDateFrom() {
+        return expiryDateFrom;
+    }
+
+    public void setExpiryDateFrom(Date expiryDateFrom) {
+        this.expiryDateFrom = expiryDateFrom;
+    }
+
+    public Date getExpiryDateTo() {
+        return expiryDateTo;
+    }
+
+    public void setExpiryDateTo(Date expiryDateTo) {
+        this.expiryDateTo = expiryDateTo;
+    }
 }

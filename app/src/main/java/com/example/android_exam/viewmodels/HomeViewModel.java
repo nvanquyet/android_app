@@ -38,6 +38,7 @@ import com.example.android_exam.data.dto.ingredient.IngredientSearchResultDto;
 import com.example.android_exam.data.dto.nutrition.NutritionTip;
 import com.example.android_exam.data.dto.nutrition.OverviewNutritionSummaryDto;
 import com.example.android_exam.data.dto.response.ApiResponse;
+import com.example.android_exam.core.mapper.DtoMapper;
 import com.example.android_exam.data.dto.user.UserProfileDto;
 import com.example.android_exam.data.models.base.User;
 import com.example.android_exam.data.models.enums.ActivityLevel;
@@ -185,23 +186,49 @@ public class HomeViewModel extends ViewModel {
     }
 
     private void loadUserProfile() {
-        SessionManager.getUser(new SessionManager.UserCallback() {
+        // Load user profile từ API để có đầy đủ thông tin (firstName, lastName, email, etc.)
+        ApiManager.getInstance().getAuthClient().getUserProfile(new AuthCallback<ApiResponse<UserProfileDto>>() {
             @Override
-            public void onUserLoaded(User user) {
-                userProfile.setValue(user);
-                updateUserProfile(
-                        String.valueOf(user.getHeight()),
-                        String.valueOf(user.getWeight()),
-                        user.getGender() != null ? user.getGender().toString() : "",
-                        user.getActivityLevel() != null ? user.getActivityLevel().toString() : "",
-                        user.getPrimaryNutritionGoal() != null ? user.getPrimaryNutritionGoal().toString() : "",
-                        String.valueOf(user.getTargetWeight())
-                );
+            public void onSuccess(ApiResponse<UserProfileDto> response) {
+                if (response.isSuccess() && response.getData() != null) {
+                    UserProfileDto profileDto = response.getData();
+                    // Convert DTO to User model
+                    User user = DtoMapper.toUser(profileDto);
+                    // Sử dụng postValue() vì callback này có thể chạy trên background thread
+                    userProfile.postValue(user);
+                } else {
+                    // Fallback to SessionManager nếu API fail
+                    loadUserFromSessionManager();
+                }
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(null, "Error loading user profile: " + error, Toast.LENGTH_SHORT).show();
+                Log.w("HomeViewModel", "Error loading user profile from API: " + error);
+                // Fallback to SessionManager
+                loadUserFromSessionManager();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                Log.w("HomeViewModel", "Failure loading user profile from API: " + throwable.getMessage(), throwable);
+                // Fallback to SessionManager
+                loadUserFromSessionManager();
+            }
+        });
+    }
+
+    private void loadUserFromSessionManager() {
+        SessionManager.getUser(new SessionManager.UserCallback() {
+            @Override
+            public void onUserLoaded(User user) {
+                // Sử dụng postValue() vì callback này có thể chạy trên background thread
+                userProfile.postValue(user);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.w("HomeViewModel", "Error loading user from SessionManager: " + error);
             }
         });
     }
@@ -210,8 +237,9 @@ public class HomeViewModel extends ViewModel {
     public void onManageIngredientsClick(Context context) {
         // Call Api to get ingredients
         IngredientFilterDto filter = new IngredientFilterDto();
-        filter.setSortBy("expiryDate");
-        filter.setSortDirection("asc");
+        // Set default pagination
+        filter.setPage(1);
+        filter.setPageSize(100);
         LoadingActivity.getInstance().show();
         ApiManager.getInstance().getIngredientClient().getAllIngredients(filter, new DataCallback<ApiResponse<IngredientSearchResultDto>>() {
             @Override
@@ -245,8 +273,9 @@ public class HomeViewModel extends ViewModel {
 
     public void onDetectIngredientsClick(Context context) {
         IngredientFilterDto filter = new IngredientFilterDto();
-        filter.setSortBy("expiryDate");
-        filter.setSortDirection("asc");
+        // Set default pagination
+        filter.setPage(1);
+        filter.setPageSize(100);
         LoadingActivity.getInstance().show();
         ApiManager.getInstance().getIngredientClient().getAllIngredients(filter, new DataCallback<ApiResponse<IngredientSearchResultDto>>() {
             @Override

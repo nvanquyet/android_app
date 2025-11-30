@@ -15,6 +15,9 @@ public class FoodIngredientDto implements Serializable {
 
     // For response
     private String ingredientName;
+    
+    // Remaining quantity after deduction (from backend response)
+    private BigDecimal remainingQuantity;
 
     // Constructors
     public FoodIngredientDto() {}
@@ -63,5 +66,13 @@ public class FoodIngredientDto implements Serializable {
 
     public void setIngredientName(String ingredientName) {
         this.ingredientName = ingredientName;
+    }
+
+    public BigDecimal getRemainingQuantity() {
+        return remainingQuantity;
+    }
+
+    public void setRemainingQuantity(BigDecimal remainingQuantity) {
+        this.remainingQuantity = remainingQuantity;
     }
 }

@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.example.android_exam.core.config.AppConfig;
+import com.example.android_exam.core.mapper.DtoMapper;
 import com.example.android_exam.data.api.ApiManager;
 import com.example.android_exam.data.api.DataCallback;
 import com.example.android_exam.data.dto.food.FoodIngredientDto;
@@ -40,8 +42,8 @@ public class HomeRepository {
         return instance;
     }
 
-    private static final String CACHE_PREF_NAME = "FoodCache";
-    private static final String CACHE_KEY = "Suggestions";
+    private static final String CACHE_PREF_NAME = AppConfig.Cache.PREF_NAME_FOOD;
+    private static final String CACHE_KEY = AppConfig.Cache.KEY_SUGGESTIONS;
 
     private List<FoodSuggestionResponseDto> cachedSuggestions = null;
 
@@ -111,7 +113,7 @@ public class HomeRepository {
             @Override
             public void onUserLoaded(User user) {
                 var foodSuggestionRequest = new FoodSuggestionRequestDto();
-                foodSuggestionRequest.setUserInformation(user.toUserInformationDto());
+                foodSuggestionRequest.setUserInformation(DtoMapper.toUserInformationDto(user));
 
                 // Call API
                 ApiManager.getInstance().getFoodClient().getFoodSuggestions(foodSuggestionRequest, new DataCallback<ApiResponse<List<FoodSuggestionResponseDto>>>() {
@@ -181,14 +183,7 @@ public class HomeRepository {
         SessionManager.getUser(new SessionManager.UserCallback() {
             @Override
             public void onUserLoaded(User user) {
-                UserInformationDto userInfo = new UserInformationDto();
-                userInfo.setGender(user.getGender());
-                userInfo.setDateOfBirth(user.getDateOfBirth());
-                userInfo.setHeight(user.getHeight());
-                userInfo.setWeight(user.getWeight());
-                userInfo.setTargetWeight(user.getTargetWeight());
-                userInfo.setPrimaryNutritionGoal(user.getPrimaryNutritionGoal());
-                userInfo.setActivityLevel(user.getActivityLevel());
+                UserInformationDto userInfo = DtoMapper.toUserInformationDto(user);
                 ApiManager.getInstance().getNutritionClient().getOverviewNutritionSummary(userInfo, new DataCallback<ApiResponse<OverviewNutritionSummaryDto>>() {
                     @Override
                     public void onSuccess(ApiResponse<OverviewNutritionSummaryDto> result) {

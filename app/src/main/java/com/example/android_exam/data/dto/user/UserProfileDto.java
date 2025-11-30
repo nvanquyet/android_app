@@ -1,10 +1,10 @@
 package com.example.android_exam.data.dto.user;
 
+import com.example.android_exam.core.datetime.DateTimeTypeAdapter;
 import com.example.android_exam.data.models.base.User;
 import com.example.android_exam.data.models.enums.ActivityLevel;
 import com.example.android_exam.data.models.enums.Gender;
 import com.example.android_exam.data.models.enums.NutritionGoal;
-import com.example.android_exam.utils.ISODateAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
@@ -19,7 +19,7 @@ public class UserProfileDto {
     @SerializedName("gender")
     private Gender gender;
 
-    @JsonAdapter(ISODateAdapter.class)
+    @JsonAdapter(DateTimeTypeAdapter.class)
     private Date dateOfBirth;
     private Double height;
     private Double weight;

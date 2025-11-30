@@ -108,29 +108,6 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Search -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilHomeSearch"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:boxStrokeColor="@color/primary"
-                    app:boxCornerRadiusTopStart="18dp"
-                    app:boxCornerRadiusTopEnd="18dp"
-                    app:boxCornerRadiusBottomStart="18dp"
-                    app:boxCornerRadiusBottomEnd="18dp"
-                    app:startIconDrawable="@drawable/ic_search"
-                    app:startIconTint="@color/primary">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etHomeSearch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Tìm món ăn, nguyên liệu..."
-                        android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <!-- Categories -->
                 <LinearLayout
                     android:layout_width="match_parent"

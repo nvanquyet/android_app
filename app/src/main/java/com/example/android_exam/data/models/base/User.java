@@ -125,18 +125,6 @@ public class User extends BaseEntity {
         return bmr * activityFactor;
     }
 
-    public UserInformationDto toUserInformationDto() {
-        UserInformationDto dto = new UserInformationDto();
-        dto.setDateOfBirth(dateOfBirth);
-        dto.setGender(gender);
-        dto.setHeight(height);
-        dto.setWeight(weight);
-        dto.setTargetWeight(targetWeight);
-        dto.setPrimaryNutritionGoal(primaryNutritionGoal);
-        dto.setActivityLevel(activityLevel);
-        return dto;
-    }
-
     public String toJson(){
         return new com.google.gson.Gson().toJson(this);
     }

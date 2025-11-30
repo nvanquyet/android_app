@@ -27,7 +27,7 @@
 
     </LinearLayout>
 
-    <!-- Quantity and unit section -->
+    <!-- Quantity and unit section with adjust buttons (only for ingredients in inventory) -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -36,6 +36,19 @@
         android:paddingHorizontal="12dp"
         android:paddingVertical="6dp">
 
+        <!-- Decrease button (only visible for ingredients in inventory) -->
+        <ImageButton
+            android:id="@+id/btn_decrease"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_remove"
+            android:background="@drawable/circle_background"
+            android:contentDescription="Giảm số lượng"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:scaleType="fitCenter" />
+
         <TextView
             android:id="@+id/tv_quantity"
             android:layout_width="wrap_content"
@@ -43,7 +56,22 @@
             android:text="250"
             android:textColor="@color/colorPrimary"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:minWidth="40dp"
+            android:gravity="center" />
+
+        <!-- Increase button (only visible for ingredients in inventory) -->
+        <ImageButton
+            android:id="@+id/btn_increase"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_plus"
+            android:background="@drawable/circle_background"
+            android:contentDescription="Tăng số lượng"
+            android:visibility="gone"
+            android:layout_marginStart="8dp"
+            android:padding="8dp"
+            android:scaleType="fitCenter" />
 
         <TextView
             android:id="@+id/tv_unit"

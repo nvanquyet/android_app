@@ -121,8 +121,9 @@ public class IngredientViewModel extends ViewModel {
         loadingLiveData.postValue(true);
 
         IngredientFilterDto filter = new IngredientFilterDto();
-        filter.setSortBy("expiryDate");
-        filter.setSortDirection("asc");
+        // Set default pagination
+        filter.setPage(1);
+        filter.setPageSize(100);
 
         ApiManager.getInstance().getIngredientClient().getAllIngredients(filter, new DataCallback<ApiResponse<IngredientSearchResultDto>>() {
             @Override
@@ -402,9 +403,7 @@ public class IngredientViewModel extends ViewModel {
 
     public void deleteIngredient(int ingredientId) {
         loadingLiveData.postValue(true);
-        DeleteIngredientRequestDto dto = new DeleteIngredientRequestDto();
-        dto.setId(ingredientId);
-        ApiManager.getInstance().getIngredientClient().deleteIngredient(dto, new DataCallback<ApiResponse<Boolean>>() {
+        ApiManager.getInstance().getIngredientClient().deleteIngredient(ingredientId, new DataCallback<ApiResponse<Boolean>>() {
             @Override
             public void onSuccess(@NonNull ApiResponse<Boolean> response) {
                 loadingLiveData.postValue(false);

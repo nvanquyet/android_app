@@ -13,7 +13,7 @@ import com.example.android_exam.data.dto.food.FoodDataResponseDto;
 import com.example.android_exam.data.dto.food.FoodIngredientDto;
 import com.example.android_exam.data.dto.food.UpdateFoodRequestDto;
 import com.example.android_exam.data.dto.response.ApiResponse;
-import com.example.android_exam.utils.DateUtils;
+import com.example.android_exam.core.datetime.DateTimeManager;
 import com.example.android_exam.utils.FoodUtils;
 
 import java.math.BigDecimal;
@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class FoodDetailViewModel extends ViewModel {
+    private final DateTimeManager dateTimeManager = DateTimeManager.getInstance();
+
     // LiveData
     private MutableLiveData<FoodDataResponseDto> foodLiveData = new MutableLiveData<>();
     private MutableLiveData<List<FoodIngredientDto>> ingredientsLiveData = new MutableLiveData<>();
@@ -58,9 +60,9 @@ public class FoodDetailViewModel extends ViewModel {
         hasChangesLiveData.setValue(false);
         confirmButtonEnabledLiveData.setValue(false);
 
-        LocalDateTime currentDateTime = DateUtils.getCurrentDateTime(null);
+        LocalDateTime currentDateTime = dateTimeManager.getCurrentDateTime();
         selectedConsumeTime = currentDateTime.format(LOCAL_TIME_FORMATTER);
-        selectedConsumeTimeUtc = DateUtils.formatLocalDateTimeToIsoUTC(currentDateTime);
+        selectedConsumeTimeUtc = dateTimeManager.formatLocalDateTimeToIsoUTC(currentDateTime);
         consumeTimeLiveData.setValue(selectedConsumeTime);
 
         Log.d("FoodDetailViewModel", "Default consume time set (local): " + selectedConsumeTime);
@@ -77,9 +79,9 @@ public class FoodDetailViewModel extends ViewModel {
         normalizeConsumedAt(originalFood);
         currentFood = copyFood(originalFood);
 
-        LocalDateTime consumeDateTime = DateUtils.parseIsoDateTime(originalFood.getConsumedAt());
+        LocalDateTime consumeDateTime = dateTimeManager.parseIsoDateTime(originalFood.getConsumedAt());
         if (consumeDateTime == null) {
-            consumeDateTime = DateUtils.getCurrentDateTime(null);
+            consumeDateTime = dateTimeManager.getCurrentDateTime();
         }
         applySelectedConsumeDateTime(consumeDateTime);
 
@@ -126,12 +128,11 @@ public class FoodDetailViewModel extends ViewModel {
     private String convertLocalTimeToUTC(String localTimeString) {
         try {
             LocalDateTime localDateTime = LocalDateTime.parse(localTimeString, LOCAL_TIME_FORMATTER);
-            return DateUtils.formatLocalDateTimeToIsoUTC(localDateTime);
+            return dateTimeManager.formatLocalDateTimeToIsoUTC(localDateTime);
         } catch (Exception e) {
             Log.e("FoodDetailViewModel", "Error converting local time to UTC: " + localTimeString, e);
-            // Fallback to using DateUtils method
-            Calendar calendar = Calendar.getInstance();
-            return DateUtils.formatDateTimeToIso(calendar.getTime());
+            // Fallback to using DateTimeManager method
+            return dateTimeManager.formatDateTimeToIsoUTC(new java.util.Date());
         }
     }
 
@@ -177,9 +178,19 @@ public class FoodDetailViewModel extends ViewModel {
             @Override
             public void onSuccess(ApiResponse<FoodDataResponseDto> result) {
                 if (result.isSuccess()) {
+                    // Cập nhật currentFood với data từ response (có remainingQuantity)
+                    if (result.getData() != null) {
+                        currentFood = result.getData();
+                        foodLiveData.postValue(currentFood);
+                        ingredientsLiveData.postValue(currentFood.getIngredients());
+                    }
+                    
                     originalFood = copyFood(currentFood);
                     hasChangesLiveData.postValue(false);
-                    successMessageLiveData.postValue("Cập nhật món ăn thành công");
+                    
+                    // Tạo thông báo với thông tin số lượng nguyên liệu còn lại
+                    String message = buildSuccessMessageWithRemainingQuantities(result.getData());
+                    successMessageLiveData.postValue(message);
                     updateConfirmButtonState();
                 } else {
                     errorLiveData.postValue(result.getMessage());
@@ -230,9 +241,19 @@ public class FoodDetailViewModel extends ViewModel {
             @Override
             public void onSuccess(ApiResponse<FoodDataResponseDto> result) {
                 if (result.isSuccess()) {
+                    // Cập nhật currentFood với data từ response (có remainingQuantity)
+                    if (result.getData() != null) {
+                        currentFood = result.getData();
+                        foodLiveData.postValue(currentFood);
+                        ingredientsLiveData.postValue(currentFood.getIngredients());
+                    }
+                    
                     originalFood = copyFood(currentFood);
                     hasChangesLiveData.postValue(false);
-                    successMessageLiveData.postValue("Thêm món ăn thành công");
+                    
+                    // Tạo thông báo với thông tin số lượng nguyên liệu còn lại
+                    String message = buildSuccessMessageWithRemainingQuantities(result.getData());
+                    successMessageLiveData.postValue(message);
                     updateConfirmButtonState();
                 } else {
                     errorLiveData.postValue(result.getMessage());
@@ -356,6 +377,7 @@ public class FoodDetailViewModel extends ViewModel {
                 copiedIngredient.setIngredientName(ingredient.getIngredientName());
                 copiedIngredient.setQuantity(ingredient.getQuantity());
                 copiedIngredient.setUnit(ingredient.getUnit());
+                copiedIngredient.setRemainingQuantity(ingredient.getRemainingQuantity());
                 copiedIngredients.add(copiedIngredient);
             }
         }
@@ -375,9 +397,9 @@ public class FoodDetailViewModel extends ViewModel {
     }
 
     private void applySelectedConsumeDateTime(LocalDateTime dateTime) {
-        LocalDateTime effectiveDateTime = dateTime != null ? dateTime : DateUtils.getCurrentDateTime(null);
+        LocalDateTime effectiveDateTime = dateTime != null ? dateTime : dateTimeManager.getCurrentDateTime();
         selectedConsumeTime = effectiveDateTime.format(LOCAL_TIME_FORMATTER);
-        selectedConsumeTimeUtc = DateUtils.formatLocalDateTimeToIsoUTC(effectiveDateTime);
+        selectedConsumeTimeUtc = dateTimeManager.formatLocalDateTimeToIsoUTC(effectiveDateTime);
         consumeTimeLiveData.setValue(selectedConsumeTime);
         if (currentFood != null) {
             currentFood.setConsumedAt(selectedConsumeTimeUtc);
@@ -392,11 +414,58 @@ public class FoodDetailViewModel extends ViewModel {
         if (consumedAt == null || consumedAt.isEmpty()) {
             return;
         }
-        LocalDateTime parsedDateTime = DateUtils.parseIsoDateTime(consumedAt);
+        LocalDateTime parsedDateTime = dateTimeManager.parseIsoDateTime(consumedAt);
         if (parsedDateTime == null) {
             return;
         }
-        food.setConsumedAt(DateUtils.formatLocalDateTimeToIsoUTC(parsedDateTime));
+        food.setConsumedAt(dateTimeManager.formatLocalDateTimeToIsoUTC(parsedDateTime));
+    }
+
+    /**
+     * Tạo thông báo thành công với thông tin số lượng nguyên liệu còn lại
+     * Backend tự động trừ nguyên liệu và trả về remainingQuantity trong response
+     */
+    private String buildSuccessMessageWithRemainingQuantities(FoodDataResponseDto foodData) {
+        if (foodData == null || foodData.getIngredients() == null || foodData.getIngredients().isEmpty()) {
+            return isSuggestionFood ? "Thêm món ăn thành công" : "Cập nhật món ăn thành công";
+        }
+
+        StringBuilder message = new StringBuilder();
+        message.append(isSuggestionFood ? "Thêm món ăn thành công" : "Cập nhật món ăn thành công");
+        
+        // Kiểm tra xem có nguyên liệu nào có remainingQuantity không
+        boolean hasRemainingInfo = false;
+        for (FoodIngredientDto ingredient : foodData.getIngredients()) {
+            if (ingredient.getIngredientId() != null && ingredient.getIngredientId() > 0 && 
+                ingredient.getRemainingQuantity() != null) {
+                hasRemainingInfo = true;
+                break;
+            }
+        }
+        
+        if (hasRemainingInfo) {
+            message.append("\n\nNguyên liệu còn lại:");
+            for (FoodIngredientDto ingredient : foodData.getIngredients()) {
+                if (ingredient.getIngredientId() != null && ingredient.getIngredientId() > 0) {
+                    String ingredientName = ingredient.getIngredientName() != null ? 
+                        ingredient.getIngredientName() : "Nguyên liệu ID " + ingredient.getIngredientId();
+                    
+                    if (ingredient.getRemainingQuantity() != null) {
+                        BigDecimal remaining = ingredient.getRemainingQuantity();
+                        String unit = ingredient.getUnit() != null ? ingredient.getUnit().toString() : "";
+                        
+                        if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                            message.append("\n• ").append(ingredientName).append(": Hết");
+                        } else {
+                            message.append("\n• ").append(ingredientName)
+                                   .append(": ").append(remaining).append(" ").append(unit);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return message.toString();
     }
 
     // Getters for LiveData

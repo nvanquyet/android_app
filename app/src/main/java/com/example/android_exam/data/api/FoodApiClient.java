@@ -1,5 +1,6 @@
 package com.example.android_exam.data.api;
 
+import com.example.android_exam.core.config.AppConfig;
 import com.example.android_exam.data.dto.food.CreateFoodRequestDto;
 import com.example.android_exam.data.dto.food.DeleteFoodRequestDto;
 import com.example.android_exam.data.dto.food.FoodDataResponseDto;
@@ -30,23 +31,22 @@ public class FoodApiClient extends BaseApiClient {
 
     // Delete food
     public void deleteFood(DeleteFoodRequestDto dto, DataCallback<ApiResponse<Boolean>> callback) {
-        delete("food", dto, new TypeToken<ApiResponse<Boolean>>() {}, callback);
+        delete(AppConfig.Endpoints.FOOD_DELETE, dto, new TypeToken<ApiResponse<Boolean>>() {}, callback);
     }
 
     // Get food by ID
     public void getFoodById(int id, DataCallback<ApiResponse<FoodDataResponseDto>> callback) {
-        get("food/" + id, new TypeToken<ApiResponse<FoodDataResponseDto>>(){}, callback);
+        get(String.format(AppConfig.Endpoints.FOOD_BY_ID, id), new TypeToken<ApiResponse<FoodDataResponseDto>>(){}, callback);
     }
 
-    // Get all foods (if endpoint supports it)
     // Get food suggestions
     public void getFoodSuggestions(FoodSuggestionRequestDto requestDto, DataCallback<ApiResponse<List<FoodSuggestionResponseDto>>> callback) {
-        post("food/suggestions", requestDto, new TypeToken<ApiResponse<List<FoodSuggestionResponseDto>>>(){}, callback);
+        post(AppConfig.Endpoints.FOOD_SUGGESTIONS, requestDto, new TypeToken<ApiResponse<List<FoodSuggestionResponseDto>>>(){}, callback);
     }
 
     // Get recipe suggestions
     public void getRecipeSuggestions(FoodRecipeRequestDto recipeRequest, DataCallback<ApiResponse<FoodDataResponseDto>> callback) {
-        post("food/recipes", recipeRequest, new TypeToken<ApiResponse<FoodDataResponseDto>>(){}, callback);
+        post(AppConfig.Endpoints.FOOD_RECIPES, recipeRequest, new TypeToken<ApiResponse<FoodDataResponseDto>>(){}, callback);
     }
 
 
@@ -54,7 +54,7 @@ public class FoodApiClient extends BaseApiClient {
         Map<String, String> formFields = createFormFieldsFromDto(dto);
 
         postMultipart(
-                "food",
+                AppConfig.Endpoints.FOOD_CREATE,
                 formFields,
                 imageFile,
                 "Image",
@@ -68,7 +68,7 @@ public class FoodApiClient extends BaseApiClient {
         Map<String, String> formFields = createFormFieldsFromDto(dto);
 
         putMultipart(
-                "food",
+                AppConfig.Endpoints.FOOD_UPDATE,
                 formFields,
                 imageFile,
                 "Image",
@@ -127,7 +127,7 @@ public class FoodApiClient extends BaseApiClient {
         }
         if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
             // Convert list to JSON string
-            formFields.put("Ingredients", new Gson().toJson(dto.getIngredients()));
+            formFields.put("Ingredients", gson.toJson(dto.getIngredients()));
         }
         if (dto.getConsumedAt() != null) {
             formFields.put("ConsumedAt", dto.getConsumedAt().toString());
@@ -193,7 +193,7 @@ public class FoodApiClient extends BaseApiClient {
 
         if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
             // Convert list to JSON string
-            formFields.put("Ingredients", new Gson().toJson(dto.getIngredients()));
+            formFields.put("Ingredients", gson.toJson(dto.getIngredients()));
         }
 
         return formFields;

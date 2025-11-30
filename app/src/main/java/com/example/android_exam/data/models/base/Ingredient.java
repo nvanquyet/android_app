@@ -2,7 +2,7 @@ package com.example.android_exam.data.models.base;
 
 import com.example.android_exam.data.models.enums.IngredientCategory;
 import com.example.android_exam.data.models.enums.IngredientUnit;
-import com.example.android_exam.utils.DateUtils;
+import com.example.android_exam.core.datetime.DateTimeManager;
 import com.google.gson.annotations.SerializedName;
 
 import java.time.LocalDate;
@@ -35,7 +35,9 @@ public class Ingredient extends BaseEntity {
     public void setUnit(IngredientUnit unit) { this.unit = unit; }
     public IngredientCategory getCategory() { return category; }
     public void setCategory(IngredientCategory category) { this.category = category; }
-    public LocalDate getExpiryDate() { return DateUtils.convertToLocalDate(expiryDate); }
+    private static final DateTimeManager dateTimeManager = DateTimeManager.getInstance();
+    
+    public LocalDate getExpiryDate() { return dateTimeManager.convertToLocalDate(expiryDate); }
     public void setExpiryDate(Date expiryDate) { this.expiryDate = expiryDate; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }

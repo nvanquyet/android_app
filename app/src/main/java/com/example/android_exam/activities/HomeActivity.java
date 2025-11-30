@@ -34,6 +34,8 @@ import android.content.ComponentName;
 import java.math.BigDecimal;
 
 public class HomeActivity extends BaseActivity {
+    private static final int REQUEST_CODE_FOOD_DETAIL = 1001;
+    
     private HomeViewModel viewModel;
     private ActivityHomeBinding binding;
     private FoodSuggestionsAdapter foodAdapter;
@@ -110,8 +112,34 @@ public class HomeActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        
+        // Refresh data khi quay lại từ FoodDetailActivity hoặc các activity khác
+        // Đảm bảo calories, nutrition data và ingredient list được cập nhật
         viewModel.loadHomeData();
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        // Nếu quay lại từ FoodDetailActivity với result OK (đã thêm/cập nhật/xóa món ăn)
+        if (requestCode == REQUEST_CODE_FOOD_DETAIL && resultCode == RESULT_OK && data != null) {
+            boolean success = data.getBooleanExtra("success", false);
+            if (success) {
+                // Force refresh toàn bộ data để cập nhật:
+                // - Calories tổng và tuần (nutrition progress) - backend đã tự động cập nhật
+                // - Calories của ngày - backend đã tự động cập nhật trong Meal
+                // - Food suggestions (có thể thay đổi)
+                // - Nutrition tip
+                // - Ingredient quantities - backend đã tự động trừ khi thêm món ăn
+                viewModel.loadHomeData();
+                
+                String message = data.getStringExtra("message");
+                if (message != null && !message.isEmpty()) {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
     private void initViewModel() {
@@ -267,6 +295,20 @@ public class HomeActivity extends BaseActivity {
 
     private void updateUserProfile(User user) {
         if (user != null) {
+            // Hiển thị tên đầy đủ (firstName + lastName) hoặc username nếu không có
+            String fullName = "";
+            if (user.getFirstName() != null && !user.getFirstName().isEmpty()) {
+                fullName = user.getFirstName();
+                if (user.getLastName() != null && !user.getLastName().isEmpty()) {
+                    fullName += " " + user.getLastName();
+                }
+            } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+                fullName = user.getUsername();
+            } else {
+                fullName = "Người dùng";
+            }
+            binding.tvProfileName.setText(fullName);
+            
             binding.tvActivityLevel.setText(
                     user.getActivityLevel() != null ? user.getActivityLevel().toString() : "N/A");
 
@@ -335,11 +377,12 @@ public class HomeActivity extends BaseActivity {
             public void onSuccess(ApiResponse<FoodDataResponseDto> result) {
                 hideLoading();
                 // Navigate to FoodDetailActivity with the food data
+                // Navigate to FoodDetailActivity với request code để nhận result
                 Intent intent = new Intent(HomeActivity.this, FoodDetailActivity.class);
                 FoodDataResponseDto foodData = result.getData();
                 intent.putExtra("isSuggestionFood", true);
                 intent.putExtra("foodData", foodData);
-                startActivity(intent);
+                startActivityForResult(intent, REQUEST_CODE_FOOD_DETAIL);
             }
 
             @Override

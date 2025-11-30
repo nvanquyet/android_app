@@ -2,6 +2,7 @@ package com.example.android_exam.data.api;
 
 import android.util.Log;
 
+import com.example.android_exam.core.config.AppConfig;
 import com.example.android_exam.data.dto.ingredient.CreateIngredientRequestDto;
 import com.example.android_exam.data.dto.ingredient.DeleteIngredientRequestDto;
 import com.example.android_exam.data.dto.ingredient.IngredientDataResponseDto;
@@ -30,7 +31,7 @@ public class IngredientApiClient extends BaseApiClient {
         Map<String, String> formFields = createFormFieldsFromDto(dto);
 
         postMultipart(
-                "ingredient",
+                AppConfig.Endpoints.INGREDIENT_CREATE,
                 formFields,
                 imageFile,
                 "Image",
@@ -46,8 +47,16 @@ public class IngredientApiClient extends BaseApiClient {
 
     // Update ingredient với file
     public void updateIngredient(UpdateIngredientRequestDto dto, File imageFile, DataCallback<ApiResponse<IngredientDataResponseDto>> callback) {
+        if (dto.getId() == null) {
+            callback.onError("Ingredient ID is required for update");
+            return;
+        }
+        
         Map<String, String> formFields = createFormFieldsFromDto(dto);
-        String endpoint = "ingredient/" + dto.getId();
+        // Remove Id from form fields as it's in the path
+        formFields.remove("Id");
+        
+        String endpoint = String.format(AppConfig.Endpoints.INGREDIENT_UPDATE, dto.getId());
         putMultipart(
                 endpoint,
                 formFields,
@@ -58,29 +67,48 @@ public class IngredientApiClient extends BaseApiClient {
         );
     }
 
-    // Delete ingredient
-    public void deleteIngredient(DeleteIngredientRequestDto dto, DataCallback<ApiResponse<Boolean>> callback) {
-        delete("ingredient/" + dto.getId(), dto, new TypeToken<ApiResponse<Boolean>>(){}, callback);
+    // Delete ingredient - id in path, body is optional according to API doc
+    public void deleteIngredient(int id, DataCallback<ApiResponse<Boolean>> callback) {
+        String endpoint = String.format(AppConfig.Endpoints.INGREDIENT_DELETE, id);
+        // DELETE with path parameter, body contains id (as per API doc)
+        DeleteIngredientRequestDto dto = new DeleteIngredientRequestDto();
+        dto.setId(id);
+        delete(endpoint, dto, new TypeToken<ApiResponse<Boolean>>(){}, callback);
     }
 
     // Get ingredient by ID
     public void getIngredientById(int id, DataCallback<ApiResponse<IngredientDataResponseDto>> callback) {
-        get("ingredient/" + id, new TypeToken<ApiResponse<IngredientDataResponseDto>>(){}, callback);
+        get(String.format(AppConfig.Endpoints.INGREDIENT_BY_ID, id), new TypeToken<ApiResponse<IngredientDataResponseDto>>(){}, callback);
     }
 
-    // Get all ingredients với filter
+    // Get all ingredients với filter - matches API documentation
     public void getAllIngredients(IngredientFilterDto filter, DataCallback<ApiResponse<IngredientSearchResultDto>> callback) {
-        // Build query parameters
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(BASE_URL + "ingredient").newBuilder();
+        // Build query parameters according to API doc
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(AppConfig.BASE_URL + AppConfig.Endpoints.INGREDIENT_LIST).newBuilder();
 
+        if (filter.getPage() != null) {
+            urlBuilder.addQueryParameter("page", filter.getPage().toString());
+        }
+        if (filter.getPageSize() != null) {
+            urlBuilder.addQueryParameter("pageSize", filter.getPageSize().toString());
+        }
         if (filter.getCategory() != null) {
-            urlBuilder.addQueryParameter("category", filter.getCategory().name());
+            urlBuilder.addQueryParameter("category", filter.getCategory().toApiName());
         }
-        if (filter.getIsExpired() != null) {
-            urlBuilder.addQueryParameter("isExpired", filter.getIsExpired().toString());
+        if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty()) {
+            urlBuilder.addQueryParameter("search", filter.getSearch().trim());
         }
-        if (filter.getSearchTerm() != null && !filter.getSearchTerm().trim().isEmpty()) {
-            urlBuilder.addQueryParameter("searchTerm", filter.getSearchTerm().trim());
+        if (filter.getExpiryDateFrom() != null) {
+            // Format date to ISO 8601 string for query parameter
+            String dateFrom = com.example.android_exam.core.datetime.DateTimeManager.getInstance()
+                    .formatDateTimeToIsoUTC(filter.getExpiryDateFrom());
+            urlBuilder.addQueryParameter("expiryDateFrom", dateFrom);
+        }
+        if (filter.getExpiryDateTo() != null) {
+            // Format date to ISO 8601 string for query parameter
+            String dateTo = com.example.android_exam.core.datetime.DateTimeManager.getInstance()
+                    .formatDateTimeToIsoUTC(filter.getExpiryDateTo());
+            urlBuilder.addQueryParameter("expiryDateTo", dateTo);
         }
 
         HttpUrl finalUrl = urlBuilder.build();
@@ -95,6 +123,7 @@ public class IngredientApiClient extends BaseApiClient {
     }
 
     // Utility method để tạo form fields từ CreateIngredientRequestDto
+    // Unit and Category must be string enum names (e.g., "Gram", "Vegetables") per API doc
     private Map<String, String> createFormFieldsFromDto(CreateIngredientRequestDto dto) {
         Map<String, String> formFields = new HashMap<>();
 
@@ -108,10 +137,12 @@ public class IngredientApiClient extends BaseApiClient {
             formFields.put("Quantity", dto.getQuantity().toString());
         }
         if (dto.getUnit() != null) {
-            formFields.put("Unit", String.valueOf(dto.getUnit().toInt()));
+            // API expects string enum name (e.g., "Gram"), not integer
+            formFields.put("Unit", dto.getUnit().toApiName());
         }
         if (dto.getCategory() != null) {
-            formFields.put("Category",  String.valueOf(dto.getCategory().toInt()));
+            // API expects string enum name (e.g., "Vegetables"), not integer
+            formFields.put("Category", dto.getCategory().toApiName());
         }
         if (dto.getExpiryDate() != null) {
             formFields.put("ExpiryDate", dto.getExpiryDate());
@@ -121,12 +152,10 @@ public class IngredientApiClient extends BaseApiClient {
     }
 
     // Utility method để tạo form fields từ UpdateIngredientRequestDto
+    // Note: Id is in path, not in form fields
     private Map<String, String> createFormFieldsFromDto(UpdateIngredientRequestDto dto) {
         Map<String, String> formFields = new HashMap<>();
 
-        if (dto.getId() != null) {
-            formFields.put("Id", dto.getId().toString());
-        }
         if (dto.getName() != null) {
             formFields.put("Name", dto.getName());
         }
@@ -137,10 +166,12 @@ public class IngredientApiClient extends BaseApiClient {
             formFields.put("Quantity", dto.getQuantity().toString());
         }
         if (dto.getUnit() != null) {
-            formFields.put("Unit", String.valueOf(dto.getUnit().toInt()));
+            // API expects string enum name (e.g., "Gram"), not integer
+            formFields.put("Unit", dto.getUnit().toApiName());
         }
         if (dto.getCategory() != null) {
-            formFields.put("Category",  String.valueOf(dto.getCategory().toInt()));
+            // API expects string enum name (e.g., "Vegetables"), not integer
+            formFields.put("Category", dto.getCategory().toApiName());
         }
         if (dto.getExpiryDate() != null) {
             formFields.put("ExpiryDate", dto.getExpiryDate());

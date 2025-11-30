@@ -3,10 +3,11 @@ package com.example.android_exam.data.api;
 import android.util.Log;
 
 import okhttp3.*;
+import com.example.android_exam.core.config.AppConfig;
+import com.example.android_exam.core.datetime.DateTimeTypeAdapter;
 import com.example.android_exam.data.dto.response.ApiResponse;
 import com.example.android_exam.data.models.enums.IngredientCategory;
 import com.example.android_exam.data.models.enums.IngredientUnit;
-import com.example.android_exam.utils.ISODateAdapter;
 import com.example.android_exam.utils.IngredientCategoryDeserializer;
 import com.example.android_exam.utils.IngredientUnitDeserializer;
 import com.google.gson.Gson;
@@ -20,8 +21,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class BaseApiClient {
-    protected static final String BASE_URL = "http://74.226.96.174/api/";
-    private static final int TIMEOUT_SECONDS = 30;
+    // Singleton Gson instance for better performance
+    private static Gson sharedGson;
 
     private OkHttpClient httpClient;
     protected Gson gson;
@@ -29,15 +30,25 @@ public class BaseApiClient {
 
     public BaseApiClient() {
         this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .connectTimeout(AppConfig.API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(AppConfig.API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .writeTimeout(AppConfig.API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .build();
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(IngredientCategory.class, new IngredientCategoryDeserializer())
-                .registerTypeAdapter(IngredientUnit.class, new IngredientUnitDeserializer())
-                .registerTypeAdapter(Date.class, new ISODateAdapter())
-                .create();
+        this.gson = getSharedGson();
+    }
+
+    /**
+     * Get shared Gson instance for better performance
+     */
+    private static synchronized Gson getSharedGson() {
+        if (sharedGson == null) {
+            sharedGson = new GsonBuilder()
+                    .registerTypeAdapter(IngredientCategory.class, new IngredientCategoryDeserializer())
+                    .registerTypeAdapter(IngredientUnit.class, new IngredientUnitDeserializer())
+                    .registerTypeAdapter(Date.class, new DateTimeTypeAdapter())
+                    .create();
+        }
+        return sharedGson;
     }
 
     public void setAuthToken(String token) {
@@ -51,7 +62,7 @@ public class BaseApiClient {
     // Tạo request builder cơ bản với headers
     protected Request.Builder createRequestBuilder(String endpoint) {
         Request.Builder builder = new Request.Builder()
-                .url(BASE_URL + endpoint);
+                .url(AppConfig.BASE_URL + endpoint);
 
         if (authToken != null && !authToken.isEmpty()) {
             builder.addHeader("Authorization", "Bearer " + authToken);
@@ -81,7 +92,7 @@ public class BaseApiClient {
 
         // Add file if exists
         if (file != null && fileFieldName != null) {
-            RequestBody fileBody = RequestBody.create(file, MediaType.parse("image/*"));
+            RequestBody fileBody = RequestBody.create(file, MediaType.parse(AppConfig.API_CONTENT_TYPE_IMAGE));
             multipartBuilder.addFormDataPart(fileFieldName, file.getName(), fileBody);
         }
 
@@ -91,7 +102,7 @@ public class BaseApiClient {
     // Tạo JSON request
     protected Request createJsonRequest(String endpoint, String method, Object data) {
         Request.Builder builder = createRequestBuilder(endpoint)
-                .addHeader("Content-Type", "application/json");
+                .addHeader("Content-Type", AppConfig.API_CONTENT_TYPE_JSON);
 
         RequestBody body = null;
         if (data != null) {

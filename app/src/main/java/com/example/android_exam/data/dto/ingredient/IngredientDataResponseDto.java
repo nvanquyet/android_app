@@ -4,7 +4,7 @@ package com.example.android_exam.data.dto.ingredient;
 import com.example.android_exam.data.models.base.Ingredient;
 import com.example.android_exam.data.models.enums.IngredientCategory;
 import com.example.android_exam.data.models.enums.IngredientUnit;
-import com.example.android_exam.utils.DateUtils;
+import com.example.android_exam.core.datetime.DateTimeManager;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -43,9 +43,12 @@ public class IngredientDataResponseDto implements Serializable {
         return expiryDate != null && expiryDate.before(new Date());
     }
 
+    private static final DateTimeManager dateTimeManager = DateTimeManager.getInstance();
+
     public boolean isExpiringSoon() {
-        return expiryDate != null && DateUtils.isExpiringSoon(expiryDate, 7);
+        return expiryDate != null && dateTimeManager.isExpiringSoon(expiryDate, 7);
     }
+
     public static IngredientDataResponseDto fromIngredient(Ingredient ingredient) {
         return new IngredientDataResponseDto(
                 ingredient.getId(),
@@ -54,7 +57,7 @@ public class IngredientDataResponseDto implements Serializable {
                 BigDecimal.valueOf(ingredient.getQuantity()),
                 ingredient.getUnit(),
                 ingredient.getCategory(),
-                DateUtils.convertToDate(ingredient.getExpiryDate()),
+                dateTimeManager.convertToDate(ingredient.getExpiryDate()),
                 ingredient.getImageUrl()
         );
     }
@@ -66,7 +69,7 @@ public class IngredientDataResponseDto implements Serializable {
         dto.setQuantity(BigDecimal.valueOf(ingredient.getQuantity()));
         dto.setUnit(ingredient.getUnit());
         dto.setCategory(ingredient.getCategory());
-        dto.setExpiryDate(DateUtils.formatDateTimeToIso(ingredient.getExpiryDate()));
+        dto.setExpiryDate(dateTimeManager.formatDateToIso(ingredient.getExpiryDate()));
         return dto;
     }
 
@@ -78,7 +81,7 @@ public class IngredientDataResponseDto implements Serializable {
         dto.setQuantity(BigDecimal.valueOf(ingredient.getQuantity()));
         dto.setUnit(ingredient.getUnit());
         dto.setCategory(ingredient.getCategory());
-        dto.setExpiryDate(DateUtils.formatDateTimeToIso(ingredient.getExpiryDate()));
+        dto.setExpiryDate(dateTimeManager.formatDateToIso(ingredient.getExpiryDate()));
         return dto;
     }
 

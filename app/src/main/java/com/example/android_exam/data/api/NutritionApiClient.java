@@ -1,5 +1,6 @@
 package com.example.android_exam.data.api;
 
+import com.example.android_exam.core.config.AppConfig;
 import com.example.android_exam.data.dto.nutrition.DailyNutritionSummaryDto;
 import com.example.android_exam.data.dto.nutrition.OverviewNutritionSummaryDto;
 import com.example.android_exam.data.dto.nutrition.WeeklyNutritionSummaryDto;
@@ -22,9 +23,9 @@ public class NutritionApiClient extends BaseApiClient {
     public void getDailyNutritionSummary(UserNutritionRequestDto userNutritionRequest,
                                          DataCallback<ApiResponse<DailyNutritionSummaryDto>> callback) {
         String json = gson.toJson(userNutritionRequest);
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(AppConfig.API_CONTENT_TYPE_JSON + "; charset=utf-8"));
 
-        Request request = createRequestBuilder("nutrition/daily")
+        Request request = createRequestBuilder(AppConfig.Endpoints.NUTRITION_DAILY)
                 .post(body)
                 .build();
 
@@ -39,9 +40,9 @@ public class NutritionApiClient extends BaseApiClient {
     public void getWeeklyNutritionSummary(UserNutritionRequestDto userNutritionRequest,
                                           DataCallback<ApiResponse<WeeklyNutritionSummaryDto>> callback) {
         String json = gson.toJson(userNutritionRequest);
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(AppConfig.API_CONTENT_TYPE_JSON + "; charset=utf-8"));
 
-        Request request = createRequestBuilder("nutrition/weekly")
+        Request request = createRequestBuilder(AppConfig.Endpoints.NUTRITION_WEEKLY)
                 .post(body)
                 .build();
 
@@ -56,9 +57,9 @@ public class NutritionApiClient extends BaseApiClient {
     public void getOverviewNutritionSummary(UserInformationDto userInformationDto,
                                             DataCallback<ApiResponse<OverviewNutritionSummaryDto>> callback) {
         String json = gson.toJson(userInformationDto);
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(AppConfig.API_CONTENT_TYPE_JSON + "; charset=utf-8"));
 
-        Request request = createRequestBuilder("nutrition/overview")
+        Request request = createRequestBuilder(AppConfig.Endpoints.NUTRITION_OVERVIEW)
                 .post(body)
                 .build();
 
